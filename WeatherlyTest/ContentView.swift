@@ -8,14 +8,43 @@
 import SwiftUI
 
 struct ContentView: View {
+
+    @State private var summary: WeatherSummary?
+    @State private var isLoading = false
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            VStack {
+
+                Text("Current Weather")
+                    .font(.largeTitle)
+
+                if let summary {
+                    Text("Temperature: \(summary.temperature) °C")
+                    Text("Wind Speed: \(summary.windSpeed) km/h")
+                } else if isLoading {
+                    ProgressView()
+                } else {
+                    Text("No data")
+                }
+
+            }
+            .padding()
+            .task {
+                await load()
+            }
         }
-        .padding()
+    }
+
+    func load() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            summary = try await LiveWeatherService().fetchWeather()
+        } catch {
+            print(error)
+        }
     }
 }
 
